@@ -1,0 +1,5 @@
+mountpoints:
+  /:
+    url: "https://author-p141866-e1781670.adobeaemcloud.com/bin/franklin.delivery/aemysites/swetabar-xwalk-250917/main"
+    type: "markup"
+    suffix: ".html"
