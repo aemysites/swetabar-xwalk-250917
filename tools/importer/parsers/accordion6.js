@@ -1,44 +1,43 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Accordion block table: header row, then one row per accordion item (2 columns)
-  const headerRow = ['Accordion']; // header row as per markdown example
-  const rows = [headerRow];
+  // Accordion block: 2 columns, first row is header with 'Accordion'
+  const rows = [];
+  rows.push(['Accordion']); // Header row as in example
 
-  // Get all direct children that are accordions
-  const accordionItems = Array.from(element.querySelectorAll(':scope > .accordion'));
-
-  accordionItems.forEach((accordion) => {
-    // Title: find the .w-dropdown-toggle > .paragraph-lg
-    const toggle = accordion.querySelector('.w-dropdown-toggle');
-    let titleEl = null;
+  // Each accordion item is a .accordion.w-dropdown direct child
+  const accordionItems = element.querySelectorAll(':scope > .accordion.w-dropdown');
+  accordionItems.forEach((item) => {
+    // Title: inside .w-dropdown-toggle > .paragraph-lg
+    let titleCell = '';
+    const toggle = item.querySelector('.w-dropdown-toggle');
     if (toggle) {
-      titleEl = toggle.querySelector('.paragraph-lg') || toggle;
+      const titleDiv = toggle.querySelector('.paragraph-lg');
+      if (titleDiv) {
+        titleCell = titleDiv;
+      } else {
+        titleCell = document.createTextNode(toggle.textContent.trim());
+      }
     }
 
-    // Content: find the .accordion-content (nav), then its .rich-text or content
-    const contentNav = accordion.querySelector('.accordion-content');
-    let contentEl = null;
-    if (contentNav) {
-      // Try to find .rich-text inside
-      contentEl = contentNav.querySelector('.rich-text') || contentNav;
+    // Content: inside nav.accordion-content .w-richtext or all content in nav
+    let contentCell = '';
+    const nav = item.querySelector('nav.accordion-content');
+    if (nav) {
+      const rich = nav.querySelector('.w-richtext');
+      if (rich) {
+        contentCell = rich;
+      } else {
+        // fallback: all content inside nav
+        contentCell = document.createElement('div');
+        Array.from(nav.childNodes).forEach((node) => {
+          contentCell.appendChild(node.cloneNode(true));
+        });
+      }
     }
 
-    // Defensive: if either is missing, skip this item
-    if (!titleEl || !contentEl) return;
-
-    rows.push([
-      titleEl,
-      contentEl,
-    ]);
+    rows.push([titleCell, contentCell]);
   });
 
-  // Create the block table
   const table = WebImporter.DOMUtils.createTable(rows, document);
-  // Ensure the header row is a single cell and all other rows have two cells
-  // Remove any colspan from header row
-  const firstRow = table.querySelector('tr');
-  if (firstRow && firstRow.children.length === 1) {
-    firstRow.children[0].removeAttribute('colspan');
-  }
   element.replaceWith(table);
 }

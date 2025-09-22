@@ -1,28 +1,37 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Header row as per requirements
+  // Find the grid layout containing the columns
+  const grid = element.querySelector('.grid-layout');
+  let columns = [];
+
+  if (grid) {
+    // Each direct child of the grid is a column
+    columns = Array.from(grid.children);
+  }
+
+  // Defensive: fallback if grid not found
+  if (columns.length === 0) {
+    const container = element.querySelector('.container');
+    if (container) {
+      columns = Array.from(container.children);
+    } else {
+      columns = Array.from(element.children);
+    }
+  }
+
+  // Only keep columns with content
+  columns = columns.filter(col => col.textContent.trim() !== '' || col.querySelector('svg'));
+
+  // Table header must match block name exactly
   const headerRow = ['Columns (columns8)'];
+  // Each column's DOM node as a cell
+  const secondRow = columns.map(col => col);
 
-  // Find the main grid container with columns
-  const grid = element.querySelector('.w-layout-grid');
-  if (!grid) return;
+  // Build the table
+  const table = WebImporter.DOMUtils.createTable([
+    headerRow,
+    secondRow,
+  ], document);
 
-  // Get all direct children of the grid - each is a column
-  const columns = Array.from(grid.children);
-
-  // Defensive: Only keep columns that have content
-  const contentColumns = columns.filter(col => col && col.childNodes.length > 0);
-
-  // Second row: one cell per column, each containing the column's content
-  // We want to preserve the original elements, not clone or re-create
-  const secondRow = contentColumns.map(col => col);
-
-  // Build the table data
-  const tableData = [headerRow, secondRow];
-
-  // Create the block table
-  const block = WebImporter.DOMUtils.createTable(tableData, document);
-
-  // Replace the original element
-  element.replaceWith(block);
+  element.replaceWith(table);
 }

@@ -2,33 +2,34 @@
 export default function parse(element, { document }) {
   // Helper to get direct children by selector
   function getDirectChildren(parent, selector) {
-    return Array.from(parent.children).filter(el => el.matches(selector));
+    return Array.from(parent.children).filter(child => child.matches(selector));
   }
 
   // 1. Header row
   const headerRow = ['Tabs (tabs5)'];
-  const rows = [headerRow];
 
-  // 2. Find tab labels (menu) and tab panes (content)
-  // The first child is the tab menu, the second is the tab content
-  const [tabMenu, tabContent] = element.querySelectorAll(':scope > div');
+  // 2. Find tab menu and tab content containers
+  const tabMenu = element.querySelector('.w-tab-menu');
+  const tabContent = element.querySelector('.w-tab-content');
+
   if (!tabMenu || !tabContent) {
-    // Defensive: if structure is not as expected, do nothing
+    // Defensive: If structure is not as expected, do nothing
     return;
   }
 
-  // Get all tab menu links (labels)
-  const tabLinks = Array.from(tabMenu.querySelectorAll(':scope > a'));
-  // Get all tab panes (contents)
-  const tabPanes = Array.from(tabContent.querySelectorAll(':scope > div'));
+  // 3. Get tab labels (order matters)
+  const tabLinks = getDirectChildren(tabMenu, 'a');
+  // 4. Get tab panes (order matters)
+  const tabPanes = getDirectChildren(tabContent, 'div.w-tab-pane');
 
-  // Defensive: Only pair as many as both have
-  const tabCount = Math.min(tabLinks.length, tabPanes.length);
+  // Defensive: if counts mismatch, bail
+  if (tabLinks.length !== tabPanes.length || tabLinks.length === 0) {
+    return;
+  }
 
-  for (let i = 0; i < tabCount; i++) {
-    // Tab label: the text content of the tab menu link's child div
-    const tabLink = tabLinks[i];
-    // Defensive: sometimes the label is in a div, sometimes directly on the link
+  // 5. Build rows: each row is [label, content]
+  const rows = tabLinks.map((tabLink, idx) => {
+    // Tab label: use textContent of the label div inside the link
     let label = '';
     const labelDiv = tabLink.querySelector('div');
     if (labelDiv) {
@@ -37,17 +38,24 @@ export default function parse(element, { document }) {
       label = tabLink.textContent.trim();
     }
 
-    // Tab content: the content of the corresponding tab pane
-    const tabPane = tabPanes[i];
-    // The actual content is usually a grid div inside the pane
-    let contentDiv = tabPane.querySelector(':scope > div');
-    if (!contentDiv) contentDiv = tabPane; // fallback
+    // Tab content: get the grid inside the pane
+    const pane = tabPanes[idx];
+    // Defensive: if no pane, skip
+    if (!pane) return null;
+    // Find the grid div (first direct child)
+    const grid = pane.querySelector('.w-layout-grid, .grid-layout');
+    // Defensive: if no grid, use pane itself
+    const content = grid || pane;
 
-    // Place the label as a string, and the contentDiv as an element
-    rows.push([label, contentDiv]);
-  }
+    return [label, content];
+  }).filter(Boolean);
 
-  // Create the table block
-  const table = WebImporter.DOMUtils.createTable(rows, document);
+  // 6. Compose table data
+  const tableData = [headerRow, ...rows];
+
+  // 7. Create table
+  const table = WebImporter.DOMUtils.createTable(tableData, document);
+
+  // 8. Replace element
   element.replaceWith(table);
 }
