@@ -1,34 +1,37 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Defensive: get all immediate children (each card)
-  const cardDivs = element.querySelectorAll(':scope > div');
+  // Table header row as specified
   const headerRow = ['Cards (cards3)'];
   const rows = [headerRow];
 
-  cardDivs.forEach((cardDiv) => {
-    // Find icon/image (first .icon img)
+  // Get all immediate card containers (each card is a direct child div)
+  const cardDivs = element.querySelectorAll(':scope > div');
+
+  cardDivs.forEach(cardDiv => {
+    // Find the icon image (mandatory)
     let iconImg = null;
     const iconDiv = cardDiv.querySelector('.icon');
     if (iconDiv) {
       iconImg = iconDiv.querySelector('img');
     }
 
-    // Find text content (first <p> with utility-margin-bottom-0)
+    // Find the text content (mandatory)
     let textContent = null;
-    const textP = cardDiv.querySelector('p.utility-margin-bottom-0');
-    if (textP) {
-      textContent = textP;
-    }
+    // The text is always in a <p> with class 'utility-margin-bottom-0'
+    textContent = cardDiv.querySelector('p.utility-margin-bottom-0');
 
-    // First cell: icon image (mandatory)
-    // Second cell: text content (mandatory)
-    // Defensive: if missing, cell is empty
-    rows.push([
-      iconImg ? iconImg : '',
-      textContent ? textContent : ''
-    ]);
+    // Defensive: If no icon or text, skip this card
+    if (!iconImg && !textContent) return;
+
+    // First cell: icon image (must be element)
+    const iconCell = iconImg ? iconImg : document.createTextNode('');
+    // Second cell: text content (must be element)
+    const textCell = textContent ? textContent : document.createTextNode('');
+
+    rows.push([iconCell, textCell]);
   });
 
-  const table = WebImporter.DOMUtils.createTable(rows, document);
-  element.replaceWith(table);
+  // Create the block table and replace the original element
+  const blockTable = WebImporter.DOMUtils.createTable(rows, document);
+  element.replaceWith(blockTable);
 }

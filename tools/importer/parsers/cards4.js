@@ -1,52 +1,39 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Helper to extract card info from each <a> card element
-  function extractCardInfo(cardEl) {
-    // Find image (mandatory)
-    const img = cardEl.querySelector('img');
-    // Find the inner content container (contains tag, time, heading, desc, CTA)
-    const inner = cardEl.querySelector('div:not([class])');
-    let contentParts = [];
-    if (inner) {
-      // Tag and time (optional, can be grouped)
-      const tagRow = inner.querySelector('.flex-horizontal');
-      if (tagRow) {
-        contentParts.push(tagRow);
-      }
-      // Heading (optional)
-      const heading = inner.querySelector('h3, .h4-heading');
-      if (heading) {
-        contentParts.push(heading);
-      }
-      // Description (optional)
-      const desc = inner.querySelector('p');
-      if (desc) {
-        contentParts.push(desc);
-      }
-      // CTA (optional, bottom text)
-      // If there's a CTA, it's usually a div with text 'Read' after the paragraph
-      const ctaCandidates = Array.from(inner.querySelectorAll('div'));
-      const cta = ctaCandidates.find(div => div.textContent.trim().toLowerCase() === 'read');
-      if (cta) {
-        contentParts.push(cta);
-      }
-    }
-    // Defensive: ensure image is always present, content can be empty
-    return [img, contentParts.length ? contentParts : ''];
-  }
-
-  // Get all card <a> elements (direct children of the grid)
-  const cardLinks = Array.from(element.querySelectorAll(':scope > a'));
-
-  // Build the table rows
+  // Table header as specified
   const headerRow = ['Cards (cards4)'];
   const rows = [headerRow];
-  cardLinks.forEach(cardEl => {
-    rows.push(extractCardInfo(cardEl));
+
+  // Defensive: get all direct child <a> elements (each is a card)
+  const cardLinks = Array.from(element.querySelectorAll(':scope > a'));
+
+  cardLinks.forEach((cardLink) => {
+    // Each card's main content is inside the <a>
+    // Find image (mandatory)
+    const img = cardLink.querySelector('img');
+    // Find the content container (the div after the image)
+    const parentGrid = img ? img.parentElement : null;
+    let textContentDiv = null;
+    if (parentGrid) {
+      // Find the div that is a sibling after the image
+      const children = Array.from(parentGrid.children);
+      const imgIdx = children.indexOf(img);
+      textContentDiv = children[imgIdx + 1] || null;
+    }
+    // Defensive: fallback if structure changes
+    if (!textContentDiv) {
+      // Try to find the deepest div with text content
+      const divs = Array.from(cardLink.querySelectorAll('div'));
+      textContentDiv = divs.find(div => div.querySelector('h3, p, .tag, .paragraph-sm')) || cardLink;
+    }
+    // First cell: image (mandatory)
+    // Second cell: text content (title, desc, meta, CTA)
+    rows.push([
+      img || '',
+      textContentDiv || ''
+    ]);
   });
 
-  // Create the block table
-  const block = WebImporter.DOMUtils.createTable(rows, document);
-  // Replace the original element
-  element.replaceWith(block);
+  const table = WebImporter.DOMUtils.createTable(rows, document);
+  element.replaceWith(table);
 }
