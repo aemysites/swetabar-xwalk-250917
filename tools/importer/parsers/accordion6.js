@@ -1,49 +1,44 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Accordion block header row: plain text, exactly one column, then pad with empty string for column alignment
-  const headerRow = ['Accordion', ''];
+  // Accordion block table: header row, then one row per accordion item (2 columns)
+  const headerRow = ['Accordion']; // header row as per markdown example
+  const rows = [headerRow];
 
-  // Get all accordion items (immediate children with class 'accordion')
+  // Get all direct children that are accordions
   const accordionItems = Array.from(element.querySelectorAll(':scope > .accordion'));
 
-  // Build rows for each accordion item
-  const rows = accordionItems.map((item) => {
-    // Title cell: find the toggle div containing the label
-    const toggle = item.querySelector('.w-dropdown-toggle');
-    let titleCell = '';
+  accordionItems.forEach((accordion) => {
+    // Title: find the .w-dropdown-toggle > .paragraph-lg
+    const toggle = accordion.querySelector('.w-dropdown-toggle');
+    let titleEl = null;
     if (toggle) {
-      // Find the label inside the toggle (usually .paragraph-lg)
-      const label = toggle.querySelector('.paragraph-lg');
-      if (label) {
-        titleCell = label;
-      } else {
-        // fallback: use toggle text
-        titleCell = document.createTextNode(toggle.textContent.trim());
-      }
+      titleEl = toggle.querySelector('.paragraph-lg') || toggle;
     }
 
-    // Content cell: find the dropdown list content
-    const contentNav = item.querySelector('.accordion-content');
-    let contentCell = '';
+    // Content: find the .accordion-content (nav), then its .rich-text or content
+    const contentNav = accordion.querySelector('.accordion-content');
+    let contentEl = null;
     if (contentNav) {
-      // The actual content is inside a div, which may contain rich text
-      const contentWrapper = contentNav.querySelector('.utility-padding-all-1rem, .rich-text, .w-richtext') || contentNav;
-      if (contentWrapper) {
-        contentCell = contentWrapper;
-      } else {
-        contentCell = document.createTextNode(contentNav.textContent.trim());
-      }
+      // Try to find .rich-text inside
+      contentEl = contentNav.querySelector('.rich-text') || contentNav;
     }
 
-    return [titleCell, contentCell];
+    // Defensive: if either is missing, skip this item
+    if (!titleEl || !contentEl) return;
+
+    rows.push([
+      titleEl,
+      contentEl,
+    ]);
   });
 
-  // Compose the table cells array
-  const cells = [headerRow, ...rows];
-
   // Create the block table
-  const blockTable = WebImporter.DOMUtils.createTable(cells, document);
-
-  // Replace the original element with the new block table
-  element.replaceWith(blockTable);
+  const table = WebImporter.DOMUtils.createTable(rows, document);
+  // Ensure the header row is a single cell and all other rows have two cells
+  // Remove any colspan from header row
+  const firstRow = table.querySelector('tr');
+  if (firstRow && firstRow.children.length === 1) {
+    firstRow.children[0].removeAttribute('colspan');
+  }
+  element.replaceWith(table);
 }
