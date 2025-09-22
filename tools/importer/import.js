@@ -14,10 +14,10 @@
 import cards3Parser from './parsers/cards3.js';
 import columns2Parser from './parsers/columns2.js';
 import cards4Parser from './parsers/cards4.js';
-import columns7Parser from './parsers/columns7.js';
 import tabs5Parser from './parsers/tabs5.js';
-import columns8Parser from './parsers/columns8.js';
+import columns7Parser from './parsers/columns7.js';
 import accordion6Parser from './parsers/accordion6.js';
+import columns8Parser from './parsers/columns8.js';
 import headerParser from './parsers/header.js';
 import metadataParser from './parsers/metadata.js';
 import cleanupTransformer from './transformers/cleanup.js';
@@ -37,10 +37,10 @@ const parsers = {
   cards3: cards3Parser,
   columns2: columns2Parser,
   cards4: cards4Parser,
-  columns7: columns7Parser,
   tabs5: tabs5Parser,
-  columns8: columns8Parser,
+  columns7: columns7Parser,
   accordion6: accordion6Parser,
+  columns8: columns8Parser,
   ...customParsers,
 };
 

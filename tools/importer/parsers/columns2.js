@@ -1,30 +1,28 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Defensive: ensure the element exists and is a container
-  if (!element || !document) return;
+  // Defensive: get all immediate child divs (each is a column)
+  const columns = Array.from(element.querySelectorAll(':scope > div'));
 
-  // Header row for the block
+  // Each column contains a single image inside a div.utility-aspect-1x1
+  // We'll extract the image elements directly
+  const images = columns.map(col => {
+    // Defensive: find the first img in this column
+    const img = col.querySelector('img');
+    return img || document.createTextNode('');
+  });
+
+  // Build table rows
   const headerRow = ['Columns (columns2)'];
+  const contentRow = images;
 
-  // Get all immediate children (should be two .utility-aspect-1x1 divs)
-  const columnDivs = Array.from(element.querySelectorAll(':scope > div'));
-
-  // Defensive: only proceed if there are at least two columns
-  if (columnDivs.length < 2) return;
-
-  // Each column cell should contain the full content of its respective div
-  // (each div contains an image)
-  const columnsRow = columnDivs.map((colDiv) => colDiv);
-
-  // Build the table data
-  const tableData = [
+  const cells = [
     headerRow,
-    columnsRow
+    contentRow
   ];
 
   // Create the block table
-  const blockTable = WebImporter.DOMUtils.createTable(tableData, document);
+  const block = WebImporter.DOMUtils.createTable(cells, document);
 
   // Replace the original element with the new block table
-  element.replaceWith(blockTable);
+  element.replaceWith(block);
 }

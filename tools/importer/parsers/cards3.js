@@ -1,37 +1,36 @@
 /* global WebImporter */
 export default function parse(element, { document }) {
-  // Table header row as specified
+  // Table header row as per block spec
   const headerRow = ['Cards (cards3)'];
-  const rows = [headerRow];
 
-  // Get all immediate card containers (each card is a direct child div)
+  // Get all direct card divs (each card is a direct child)
   const cardDivs = element.querySelectorAll(':scope > div');
 
-  cardDivs.forEach(cardDiv => {
-    // Find the icon image (mandatory)
-    let iconImg = null;
+  // Build table rows for each card
+  const rows = Array.from(cardDivs).map((cardDiv) => {
+    // Find the icon/image element (first .icon img inside)
     const iconDiv = cardDiv.querySelector('.icon');
+    let imageOrIcon = null;
     if (iconDiv) {
-      iconImg = iconDiv.querySelector('img');
+      // Use the icon div itself as the cell content (includes svg/img)
+      imageOrIcon = iconDiv;
+    } else {
+      // Fallback: look for first img
+      const img = cardDiv.querySelector('img');
+      if (img) imageOrIcon = img;
     }
-
-    // Find the text content (mandatory)
-    let textContent = null;
-    // The text is always in a <p> with class 'utility-margin-bottom-0'
-    textContent = cardDiv.querySelector('p.utility-margin-bottom-0');
-
-    // Defensive: If no icon or text, skip this card
-    if (!iconImg && !textContent) return;
-
-    // First cell: icon image (must be element)
-    const iconCell = iconImg ? iconImg : document.createTextNode('');
-    // Second cell: text content (must be element)
-    const textCell = textContent ? textContent : document.createTextNode('');
-
-    rows.push([iconCell, textCell]);
+    // Find the text content (first <p> inside)
+    const textContent = cardDiv.querySelector('p');
+    // Defensive: if no icon or text, cell must still be present
+    return [imageOrIcon || '', textContent || ''];
   });
 
-  // Create the block table and replace the original element
-  const blockTable = WebImporter.DOMUtils.createTable(rows, document);
+  // Compose the table cells array
+  const cells = [headerRow, ...rows];
+
+  // Create the block table
+  const blockTable = WebImporter.DOMUtils.createTable(cells, document);
+
+  // Replace the original element with the block table
   element.replaceWith(blockTable);
 }
