@@ -1,3 +1,4 @@
+/* stylelint-disable no-descending-specificity */
 .cards > ul {
   list-style: none;
   margin: 0;
@@ -24,4 +25,155 @@
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
+}
+
+
+.cards.cards4 {
+  background: #f5f5f5;
+  padding: 40px 0;
+}
+
+/* 2-column grid, reduced gap for a more compact look */
+.cards.cards4 > ul {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Card structure tweaks for compact and balanced appearance */
+.cards.cards4 > ul > li {
+  display: flex;
+  flex-direction: row;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px 0 rgb(100 100 111 / 8%);
+  padding: 20px 28px;
+  gap: 20px;
+  align-items: center;
+  border: none;
+  min-height: 220px;
+}
+
+/* Image column: slightly wider, visually balanced */
+.cards.cards4 .cards-card-image {
+  flex: 0 0 43%;
+  max-width: 43%;
+  display: flex;
+  align-items: center;
+}
+
+/* Rounded image corners and cover fit */
+.cards.cards4 .cards-card-image img,
+.cards.cards4 .cards-card-image picture {
+  width: 100%;
+  border-radius: 12px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Text column: tweaks for vertical spacing */
+.cards.cards4 .cards-card-body {
+  flex: 1 1 57%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 0;
+  margin: 0;
+}
+
+/* Tag + Read time in a flex row for horizontal alignment */
+.cards.cards4 .cards-card-body > p:nth-child(1),
+.cards.cards4 .cards-card-body > p:nth-child(2) {
+  margin-bottom: 0;
+  margin-top: 0;
+}
+
+.cards.cards4 .cards-card-body > p:nth-child(1) {
+  display: inline-block;
+  vertical-align: middle;
+  padding: 2px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 16px;
+  text-transform: uppercase;
+  background-color: #e5e5e5;
+  color: #444;
+  letter-spacing: 0.5px;
+  margin-right: 8px;
+  min-width: max-content;
+  max-width: 120px;
+  white-space: nowrap;
+}
+
+.cards.cards4 .cards-card-body > p:nth-child(2) {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 13px;
+  color: #828282;
+  margin-right: 0;
+  margin-bottom: 0;
+  line-height: 1.2;
+}
+
+/* Simulate flex-row for tag/read-time by using negative bottom margin on first row */
+.cards.cards4 .cards-card-body > p:nth-child(1) + p:nth-child(2) {
+  margin-left: 0;
+}
+
+/* Headline: lighter, smaller, more compact */
+.cards.cards4 .cards-card-body h3 {
+  font-size: 20px;
+  font-weight: 500;
+  color: #232323;
+  margin: 6px 0 7px;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+}
+
+/* Description: reduced margin for tighter vertical spacing */
+.cards.cards4 .cards-card-body > p:nth-child(4) {
+  font-size: 15px;
+  color: #444;
+  font-weight: 400;
+  margin: 0 0 8px;
+  line-height: 1.35;
+}
+
+/* "Read" link: visually aligned left and tight below description */
+.cards.cards4 .cards-card-body > p:last-child {
+  font-size: 15px;
+  color: #666;
+  text-decoration: underline;
+  font-weight: 500;
+  margin: 0;
+  cursor: pointer;
+  align-self: flex-start;
+  line-height: 1.2;
+}
+
+/* Responsive tweaks for stacking and padding */
+@media (width <= 900px) {
+  .cards.cards4 > ul {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .cards.cards4 > ul > li {
+    flex-direction: column;
+    min-height: 0;
+    padding: 16px 12px;
+  }
+
+  .cards.cards4 .cards-card-image,
+  .cards.cards4 .cards-card-body {
+    max-width: 100%;
+    flex: none;
+  }
+
+  .cards.cards4 .cards-card-image {
+    margin-bottom: 16px;
+  }
 }
